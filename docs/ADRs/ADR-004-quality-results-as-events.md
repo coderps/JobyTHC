@@ -53,13 +53,15 @@ This approach ensures that inspection data is available to all relevant systems 
 flowchart LR
 
 CNC -->|cnc.job.completed| NATS[(NATS JetStream)]
-NATS --> Quality
+NATS --> |quality.inspection.requested| Quality
 
-Quality -->|quality.inspected| NATS
-NATS --> MES
+MES -->|assembly.job.requested| NATS
+MES -->|cnc.job.retry_requested| CNC
 
-MES -->|assembly.requested| Assembly
-MES -->|production.retry_requested| CNC
+Quality -->|quality.inspection.completed| NATS
+NATS --> |Inspection Results| MES
+
+NATS -->|Out for Assembly| Assembly
 ```
 
 ---
@@ -68,7 +70,7 @@ MES -->|production.retry_requested| CNC
 
 ```json
 {
-  "event_type": "quality.inspected",
+  "event_type": "quality.inspection.completed",
   "work_order_id": "WO-501",
   "produced_part_id": "PART-9001",
   "result": "FAILED",

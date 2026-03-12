@@ -52,15 +52,18 @@ CNC machines and Quality systems emit events, while MES consumes those events an
 ```mermaid
 flowchart LR
 
-MES -->|production.requested| CNC
-CNC -->|cnc.job.completed| EventBus[(NATS JetStream)]
-EventBus --> Quality
+MES -->|cnc.job.requested| EventBus[(NATS JetStream)]
+EventBus -->|cnc.job.requested| CNC
+CNC -->|cnc.job.completed| EventBus
+EventBus -->|quality.inspection.requested| Quality
 
-Quality -->|quality.inspected| EventBus
-EventBus --> MES
+Quality -->|quality.inspection.completed| EventBus
+EventBus -->|quality.inspection.completed| MES
 
-MES -->|assembly.requested| Assembly
-MES -->|production.retry_requested| CNC
+MES -->|cnc.job.retry_requested| EventBus
+MES -->|assembly.job.requested| EventBus
+EventBus -->|wms.inventory.update| WMS
+EventBus -->|assembly.job.requested| Assembly
 ```
 
 ---
@@ -84,7 +87,7 @@ MES -->|production.retry_requested| CNC
 
 ```json
 {
-  "event_type": "quality.inspected",
+  "event_type": "quality.inspection.completed",
   "work_order_id": "WO-501",
   "produced_part_id": "PART-9001",
   "result": "FAILED",

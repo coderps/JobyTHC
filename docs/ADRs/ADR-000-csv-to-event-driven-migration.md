@@ -38,12 +38,12 @@ Instead of exchanging files, systems will publish and consume **domain events**.
 
 Example events:
 
-- `order.accepted`
-- `production.requested`
+- `order.created`
+- `cnc.job.requested`
 - `cnc.job.started`
 - `cnc.job.completed`
-- `quality.inspected`
-- `assembly.requested`
+- `quality.inspection.completed`
+- `assembly.job.requested`
 
 Events will be persisted in **JetStream streams**, enabling:
 
@@ -75,19 +75,19 @@ Quality -->|Inspection results CSV| ERP
 ```mermaid
 flowchart LR
 
-ERP -->|order.accepted| EventBus[(NATS JetStream)]
+ERP -->|order.created| EventBus[(NATS JetStream)]
 EventBus --> MES
 
-MES -->|production.requested| EventBus
+MES -->|cnc.job.requested| EventBus
 EventBus --> CNC
 
 CNC -->|cnc.job.completed| EventBus
 EventBus --> Quality
 
-Quality -->|quality.inspected| EventBus
+Quality -->|quality.inspection.completed| EventBus
 EventBus --> MES
 
-MES -->|assembly.requested| EventBus
+MES -->|assembly.job.requested| EventBus
 EventBus --> Assembly
 ```
 
@@ -107,9 +107,9 @@ Systems begin publishing events in parallel with CSV exports.
 flowchart LR
 
 ERP -->|CSV export| MES
-ERP -->|order.accepted event| EventBus
+ERP -->|order.created event| EventBus
 
-MES -->|consume events (optional)| EventBus
+MES -->|consume events| EventBus
 ```
 
 ---
@@ -123,10 +123,12 @@ Both mechanisms operate simultaneously.
 ```mermaid
 flowchart LR
 
-ERP --> EventBus
-MES --> EventBus
-CNC --> EventBus
-Quality --> EventBus
+ERP --> WMS
+WMS --> ERP
+ERP --> Event-Bus
+MES --> Event-Bus
+CNC --> Event-Bus
+Quality --> Event-Bus
 ```
 
 ---

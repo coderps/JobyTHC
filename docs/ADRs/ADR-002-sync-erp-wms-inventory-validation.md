@@ -55,11 +55,11 @@ Reservation:
 - `PARTIALLY_RESERVED`
 - `NOT_RESERVED`
 
-Only when the required inventory is successfully reserved can the ERP confirm the order and emit the `order.accepted` event that triggers downstream manufacturing.
+Only when the required inventory is successfully reserved can the ERP confirm the order and emit the `order.created` event that triggers downstream manufacturing.
 
 ---
 
-## Interaction Flow
+## Interaction Flow (Synchronous)
 
 ```mermaid
 sequenceDiagram

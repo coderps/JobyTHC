@@ -1,7 +1,8 @@
 # PoC Scope — MES-Centric Event-Driven Manufacturing Integration
 
-## Status
-Draft
+Status: Accepted
+
+---
 
 ## Purpose
 This document defines the scope of the Proof of Concept (PoC) for the aerospace manufacturing integration challenge.
@@ -76,11 +77,9 @@ A real event broker should be used.
 - support retries / redelivery
 - allow event replay for demonstration or recovery
 
-### Suggested implementation
-- **NATS JetStream**
+### Implementation
+- **NATS JetStream**: [official docs](https://docs.nats.io/nats-concepts/jetstream)
 
-### Why it is real in the PoC
-This is a core architectural building block and should not be mocked.
 
 ---
 
@@ -88,10 +87,10 @@ This is a core architectural building block and should not be mocked.
 This is the main service of the PoC.
 
 ### Responsibilities
-- consume upstream events such as `order.accepted`
+- consume upstream events such as `order.created`
 - create production work orders
 - persist work order state
-- emit `production.requested`
+- emit `cnc.job.requested`
 - consume machining completion events
 - consume quality result events
 - decide next routing step
@@ -108,8 +107,6 @@ This is the main service of the PoC.
 - `SCRAPPED`
 - `READY_FOR_ASSEMBLY`
 
-### Why it is real in the PoC
-This is the heart of the challenge solution.
 
 ---
 
@@ -125,8 +122,8 @@ A real persistence mechanism should be used for traceability and demo clarity.
 ### Suggested implementation
 - PostgreSQL or lightweight SQL store
 
-### Why it is real in the PoC
-The PoC should show durable business state, not just in-memory event passing.
+### HOWEVER
+- For a PoC, the implementation is limited and an in-memory store is used
 
 ---
 
@@ -143,8 +140,6 @@ The logic can be intentionally simple:
 - always reserve successfully
 - or use a small hardcoded inventory table
 
-### Why it is real in the PoC
-This proves MES does not act in isolation and reacts to upstream operational constraints.
 
 ---
 
@@ -157,8 +152,6 @@ At least lightweight operational visibility should exist.
 - simple dashboard / CLI viewer / status endpoint
 - sequence view of work order progression
 
-### Why it is real in the PoC
-A challenge PoC is stronger when reviewers can clearly see the flow instead of relying only on hidden internals.
 
 ---
 
@@ -169,7 +162,7 @@ These parts should be emulated rather than deeply integrated.
 ERP should be simulated as the upstream source of accepted production demand.
 
 ### Simulation behavior
-- emits `order.accepted`
+- emits `order.created`
 - optionally includes item id, quantity, due date, priority
 
 ### Why simulated
@@ -178,14 +171,7 @@ ERP is not the architectural focus of the PoC. Fully modeling enterprise order m
 ---
 
 ## 2. WMS
-WMS should be simulated or reduced to minimal reservation behavior.
-
-### Simulation behavior
-- emits `inventory.reserved` or equivalent
-- may reject stock in one negative-path demo if desired
-
-### Why simulated
-Full warehouse logic is too large for a challenge PoC and is not necessary to prove orchestration.
+WMS is a warehouse logic is too large for a challenge PoC and is not necessary to prove orchestration. Therefore, it is completely skipped. The idea is to have a REST API style implementation for this, refer: [ADR-002](ADRs/ADR-002-sync-erp-wms-inventory-validation.md).
 
 ---
 
@@ -193,8 +179,8 @@ Full warehouse logic is too large for a challenge PoC and is not necessary to pr
 The CNC system should be represented by a worker service or simulator.
 
 ### Simulation behavior
-- consumes `production.requested`
-- waits for a short delay
+- consumes `cnc.job.requested`
+- waits for a short delay (simulating the "actual" working)
 - emits `cnc.job.completed`
 - may occasionally emit a machine failure event in an extended demo
 
@@ -210,11 +196,8 @@ Although simulated, this component should behave like an external asynchronous s
 Quality should be simulated as a station or service that returns deterministic or configurable inspection outcomes.
 
 ### Simulation behavior
-- consumes `cnc.job.completed`
-- emits one of:
-  - `quality.inspected.pass`
-  - `quality.inspected.rework`
-  - `quality.inspected.scrap`
+- consumes `quality.inspection.requested`
+- emits `quality.inspection.completed`
 
 ### Why simulated
 The purpose is to demonstrate routing decisions, not to build a real metrology or computer-vision system.
@@ -225,7 +208,7 @@ The purpose is to demonstrate routing decisions, not to build a real metrology o
 Assembly should be treated as a downstream consumer only.
 
 ### Simulation behavior
-- consumes `assembly.requested`
+- consumes `assembly.job.requested`
 - logs that the part is ready for the next process
 
 ### Why simulated
@@ -234,18 +217,17 @@ Assembly is outside the main PoC boundary and only needs to prove that MES can h
 ---
 
 ## Event Flow in Scope
-The following event flow should be supported.
+The following event flow (high-level) is supported.
 
 ```mermaid
 flowchart LR
-    ERP[ERP Simulator] -->|order.accepted| MES[MES Orchestrator]
-    WMS[Inventory Stub / WMS Simulator] -->|inventory.reserved| MES
-    MES -->|production.requested| CNC[CNC Simulator]
+    ERP[ERP Simulator] -->|order.created| MES[MES Orchestrator]
+    WMS[Inventory Stub / WMS Simulator] -->|wms.inventory.update| MES
+    MES -->|cnc.job.requested| CNC[CNC Simulator]
     CNC -->|cnc.job.completed| QA[Quality Simulator]
-    QA -->|quality.inspected.*| MES
-    MES -->|assembly.requested| ASM[Assembly Simulator]
-    MES -->|production.retry_requested| CNC
-    MES -->|production.scrapped| END[Terminal Outcome]
+    QA -->|quality.inspection.completed| MES
+    MES -->|cnc.job.retry_requested| CNC
+    MES -->|assembly.job.requested| ASM[Assembly Simulator]
 ```
 
 ---
@@ -254,21 +236,21 @@ flowchart LR
 The PoC does not need a huge catalog. A small, coherent set is enough.
 
 ### Upstream events
-- `order.accepted`
-- `inventory.reserved`
+- `order.created`
+- `wms.inventory.update`
 
 ### MES outbound events
-- `production.requested`
-- `production.retry_requested`
-- `assembly.requested`
-- `production.scrapped`
+- `cnc.job.requested`
+- `cnc.job.retry_requested`
+- `assembly.job.requested`
+- `cnc.job.scrapped`
 - `workorder.status.changed` *(optional but useful for visibility)*
 
 ### External process events
 - `cnc.job.completed`
-- `quality.inspected.pass`
-- `quality.inspected.rework`
-- `quality.inspected.scrap`
+- `quality.inspection.completed.pass`
+- `quality.inspection.completed.rework`
+- `quality.inspection.completed.scrap`
 
 ---
 
@@ -362,15 +344,15 @@ The challenge output can be presented in three layers.
 A concise demo story could be:
 
 1. Start broker, MES, DB, and simulators
-2. Publish `order.accepted`
+2. Publish `order.created`
 3. Show MES creates a work order
 4. Show inventory confirmation
-5. Show MES emits `production.requested`
+5. Show MES emits `cnc.job.requested`
 6. Show CNC simulator emits completion
 7. Show QA simulator returns:
    - first run = rework
    - second run = pass
-8. Show MES emits `assembly.requested`
+8. Show MES emits `assembly.job.requested`
 9. Show final work order state in DB or viewer
 
 This demonstrates orchestration, retry behavior, and the value of event-driven processing in a compact narrative.

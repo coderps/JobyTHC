@@ -34,7 +34,7 @@ Quality → `quality.inspection.completed` → MES
 
 MES decision:
 
-PASS → `inventory.update` → `assembly.job.requested`  
+PASS → `wms.inventory.update` → `assembly.job.requested`  
 FAIL → `cnc.job.requested` (rework)
 
 ---

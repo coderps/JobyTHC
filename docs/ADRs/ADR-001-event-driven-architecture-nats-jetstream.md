@@ -49,11 +49,11 @@ All manufacturing systems communicate through events published to JetStream stre
 
 The following systems will produce and consume events:
 
-- ERP publishes `order.accepted`
-- MES publishes `production.requested`
+- ERP publishes `order.created`
+- MES publishes `cnc.job.requested`
 - CNC publishes `cnc.job.started` and `cnc.job.completed`
-- Quality publishes `quality.inspected`
-- MES publishes `assembly.requested` or `production.retry_requested`
+- Quality publishes `quality.inspection.completed`
+- MES publishes `assembly.job.requested` or `cnc.job.retry_requested`
 
 JetStream provides:
 
@@ -74,19 +74,19 @@ All downstream manufacturing operations are asynchronous and event‑driven.
 ```mermaid
 flowchart LR
 
-ERP -->|order.accepted| NATS[(NATS JetStream)]
+ERP -->|order.created| NATS[(NATS JetStream)]
 NATS --> MES
 
-MES -->|production.requested| NATS
+MES -->|cnc.job.requested| NATS
 NATS --> CNC
 
 CNC -->|cnc.job.completed| NATS
 NATS --> Quality
 
-Quality -->|quality.inspected| NATS
+Quality -->|quality.inspection.completed| NATS
 NATS --> MES
 
-MES -->|assembly.requested| NATS
+MES -->|assembly.job.requested| NATS
 NATS --> Assembly
 ```
 
@@ -94,11 +94,11 @@ NATS --> Assembly
 
 ## Example Event Payload
 
-### production.requested
+### cnc.job.requested
 
 ```json
 {
-  "event_type": "production.requested",
+  "event_type": "cnc.job.requested",
   "order_id": "ORD-1001",
   "work_order_id": "WO-501",
   "part_id": "ObjA",
@@ -107,11 +107,11 @@ NATS --> Assembly
 }
 ```
 
-### quality.inspected
+### quality.inspection.completed
 
 ```json
 {
-  "event_type": "quality.inspected",
+  "event_type": "quality.inspection.completed",
   "work_order_id": "WO-501",
   "produced_part_id": "PART-9001",
   "result": "FAILED",

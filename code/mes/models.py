@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 
-
 @dataclass
 class WorkOrder:
     workorder_id: str
