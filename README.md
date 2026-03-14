@@ -85,7 +85,7 @@ python3 -V
 pip install -r code/requirements.txt
 ```
 
-### Start the MES
+### Start the PoC
 
 ```bash
 cd code
@@ -100,12 +100,7 @@ This starts:
 
 ### Run Test Scenarios
 
-```bash
-cd code
-python tests/test_scenarios.py first_order_simple
-python tests/test_scenarios.py second_order_parallel
-python tests/test_scenarios.py third_order_rework_scenario
-```
+For detailed test scenarios, see [code/README.md](code/README.md#run-test-scenarios)
 
 ---
 
