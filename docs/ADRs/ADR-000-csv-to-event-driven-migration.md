@@ -36,14 +36,17 @@ The system will transition from CSV batch integration to an **event-driven archi
 
 Instead of exchanging files, systems will publish and consume **domain events**.
 
-Example events:
+Key events in the manufacturing workflow:
 
-- `order.created`
-- `cnc.job.requested`
-- `cnc.job.started`
-- `cnc.job.completed`
-- `quality.inspection.completed`
-- `assembly.job.requested`
+- `order.created` - ERP publishes new customer orders with inventory reservation details
+- `mes.workorder.created` - MES creates internal work orders from customer orders
+- `cnc.job.requested` - MES requests CNC machining for work orders
+- `cnc.job.started` - CNC machine begins processing a machining job
+- `cnc.job.completed` - CNC machine completes machining with duration and status
+- `quality.inspection.requested` - MES requests quality inspection after CNC completion
+- `quality.inspection.completed` - Quality system reports inspection results with pass/fail details
+- `wms.inventory.updated` - MES updates inventory when parts pass quality inspection
+- `assembly.job.requested` - MES forwards passed parts to assembly station
 
 Events will be persisted in **JetStream streams**, enabling:
 

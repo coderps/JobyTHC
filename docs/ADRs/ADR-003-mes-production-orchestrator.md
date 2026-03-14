@@ -72,27 +72,46 @@ EventBus -->|assembly.job.requested| Assembly
 
 ```json
 {
-  "event_type": "cnc.job.completed",
-  "work_order_id": "WO-501",
+  "metadata": {
+    "event_type": "cnc.job.completed",
+    "event_id": "evt-cnc-001",
+    "timestamp": "2026-03-10T10:24:05Z",
+    "correlation_id": "corr-wo-501"
+  },
+  "workorder_id": "WO-501",
+  "order_id": "ORD-001",
+  "sku": "ObjA",
+  "quantity": 2,
   "machine_id": "CNC-07",
-  "produced_part_id": "PART-9001",
-  "duration_sec": 245,
-  "timestamp": "2026-03-10T10:24:05Z"
+  "duration_seconds": 245,
+  "attempt": 1
 }
 ```
 
----
-
-## Example Event: Quality Inspection
+## Example Event: Quality Inspection Completed
 
 ```json
 {
-  "event_type": "quality.inspection.completed",
-  "work_order_id": "WO-501",
-  "produced_part_id": "PART-9001",
-  "result": "FAILED",
-  "disposition": "SCRAP",
-  "reason": "diameter_out_of_tolerance"
+  "metadata": {
+    "event_type": "quality.inspection.completed",
+    "event_id": "evt-qual-001",
+    "timestamp": "2026-03-10T10:25:12Z",
+    "correlation_id": "corr-wo-501"
+  },
+  "workorder_id": "WO-501",
+  "order_id": "ORD-001",
+  "sku": "ObjA",
+  "inspected_quantity": 2,
+  "passed_quantity": 1,
+  "failed_quantity": 1,
+  "disposition": "PARTIAL_REWORK",
+  "failure_reasons": [
+    {
+      "qty": 1,
+      "reason": "diameter_out_of_tolerance"
+    }
+  ],
+  "attempt": 1
 }
 ```
 

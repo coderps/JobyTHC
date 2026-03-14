@@ -79,21 +79,44 @@ ERP-->>User: Order confirmed / rejected
 
 ---
 
-## Example WMS Response
+## Example Order Created Event (After WMS Validation)
 
 ```json
 {
-  "order_id": "ORD-1001",
-  "availability_status": "PARTIAL_AVAILABLE",
-  "reservation_status": "PARTIALLY_RESERVED",
-  "reserved_parts": [
-    {"part_id": "a", "qty": 1},
-    {"part_id": "b", "qty": 1}
-  ],
-  "missing_parts": [
-    {"part_id": "c", "qty": 1}
-  ],
-  "reservation_expires_at": "2026-03-10T14:00:00Z"
+  "metadata": {
+    "event_type": "order.created",
+    "event_id": "evt-ord-1001",
+    "timestamp": "2026-03-10T09:00:00Z",
+    "correlation_id": "corr-ord-1001"
+  },
+  "order": {
+    "order_id": "ORD-1001",
+    "priority": "HIGH",
+    "due_date": "2026-03-14T12:00:00Z"
+  },
+  "product": {
+    "sku": "ObjA",
+    "quantity": 1,
+    "unit_of_measure": "EA"
+  },
+  "manufacturing": {
+    "routing": ["machining", "quality", "assembly"],
+    "requires_cnc": true,
+    "part_family": "BRACKET",
+    "revision": "A"
+  },
+  "inventory_reservation": {
+    "availability_status": "PARTIAL_AVAILABLE",
+    "reservation_status": "PARTIALLY_RESERVED",
+    "reservation_expires_at": "2026-03-10T14:00:00Z",
+    "reserved_parts": [
+      {"part_id": "a", "qty": 1},
+      {"part_id": "b", "qty": 1}
+    ],
+    "missing_parts": [
+      {"part_id": "c", "qty": 1}
+    ]
+  }
 }
 ```
 

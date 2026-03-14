@@ -3,6 +3,7 @@
 This module provides in-memory storage for manufacturing work orders.
 It manages the persistence and retrieval of WorkOrder objects for the MES system.
 
+NOTE: This is a simplified implementation for demonstration purposes.
 In a production system, this would likely be replaced with a database or distributed cache,
 but for this simulation, an in-memory store is sufficient to demonstrate the orchestration logic.
 """

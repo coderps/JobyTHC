@@ -44,37 +44,60 @@ FAIL → `cnc.job.requested` (rework)
 ```
 code/
 
+README.md
+requirements.txt
+
 main.py
 Entry point. Connects to NATS and starts the orchestrator.
 
 config/
 Configuration such as NATS URL and runtime settings.
+    settings.py
+
+contracts/
+Event contract definitions.
+    cnc_events.py      → CNC machine event contracts
+    common.py          → Common event structures
+    order_events.py    → Order-related event contracts
+    quality_events.py  → Quality inspection event contracts
+
+domain/
+Domain models and events.
+    events.py          → Core domain events
 
 infrastructure/
 Messaging integration.
-    nats.py           → NATS connection manager
-    streams.py        → JetStream stream definitions
-    publisher.py      → event publishing helper
-    subscribers.py    → event subscription wrapper
+    nats.py            → NATS connection manager
+    streams.py         → JetStream stream definitions
+    publisher.py       → Event publishing helper
+    subscribers.py     → Event subscription wrapper
 
 mes/
 Core MES logic.
-    models.py         → event models
-    workorder.py      → workorder state
-    service.py        → orchestration logic
-    handlers.py       → event handlers
+    handlers.py        → Event handlers
+    models.py          → Data models
+    service.py         → Orchestration logic
+    store.py           → Data storage utilities
+    utils.py           → Utility functions
+    orchestrators/
+        cnc_orchestrator.py      → CNC job orchestration
+        order_orchestrator.py    → Order processing orchestration
+        quality_orchestrator.py  → Quality inspection orchestration
+
+observability/
+Logging helpers.
+    demo_log.py        → Human readable timeline logs
 
 simulators/
 Simulated factory systems.
     cnc_simulator.py
+    downstream_observers.py
     quality_simulator.py
 
-observability/
-Logging helpers.
-    demo_log.py       → human readable timeline logs
-
 tests/
-Scenario publishers used to trigger workflows.
+Test scenarios and publishers.
+    test_publish.py
+    test_scenarios.py
 ```
 
 ---
@@ -139,8 +162,13 @@ MES forwards 1 to assembly and sends 1 for rework.
 
 ## Requirements
 
-Python 3.11+  
-Docker
+- Docker
+- Python v3.13+
+
+```bash
+curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh
+python3 -V
+```
 
 ---
 
@@ -148,8 +176,8 @@ Docker
 
 Run NATS using Docker:
 
-```
-docker run -d   --name nats-jetstream   -p 4222:4222   -p 8222:8222   -v nats-data:/data   nats:latest   -js -sd /data
+```bash
+docker run -d --name nats-jetstream -p 4222:4222 -p 8222:8222 -v nats-data:/data nats:latest -js -sd /data
 ```
 
 Ports:
@@ -161,7 +189,7 @@ Ports:
 
 # Install Python Dependencies
 
-```
+```bash
 pip install -r requirements.txt
 ```
 
@@ -179,17 +207,17 @@ structlog
 
 Start the orchestrator:
 
-```
+```bash
 python main.py
 ```
 
 Startup actions:
 
 1. Connect to NATS
-2. Reset JetStream streams (dev mode)
+2. Reset JetStream streams (dev mode, prod will have persistent streams)
 3. Create streams
 4. Start subscribers
-5. Start simulators
+5. Start simulators and orchestrators
 
 ---
 
@@ -197,17 +225,25 @@ Startup actions:
 
 In a second terminal run:
 
-```
+```bash
 python tests/test_scenarios.py partial_rework
 ```
 
+This tests rework workflow with a 2-unit batch where 1 unit passes quality and 1 fails, triggering rework of the failed unit which then passes.
+
 Other scenarios:
 
-```
-python tests/test_scenarios.py single_unit
-python tests/test_scenarios.py larger_batch
-python tests/test_scenarios.py parallel_orders
-```
+- `single_unit`: Tests simple single-unit manufacturing flow with no rework required.
+- `larger_batch`: Tests batch processing with 4 units where all pass quality inspection on first attempt.
+- `high_priority`: Tests high-priority order processing with 2 units that trigger quality rework.
+- `low_priority`: Tests low-priority order processing with 3 units that pass quality without rework.
+- `mixed_priority`: Tests concurrent processing of HIGH and MEDIUM priority orders running in parallel.
+- `second_order_parallel`: Tests rapid sequential orders (2 units with rework + 3 units passing) processing simultaneously.
+- `bulk_processing`: Tests larger batch manufacturing with 5 units in a single CNC and quality cycle.
+- `multi_parallel`: Tests concurrent processing of 3 orders with varying quantities (2, 1, and 3 units) submitted nearly simultaneously.
+- `stress_test`: Tests system load with 5 orders of mixed quantities submitted rapidly to validate queue capacity and stability.
+
+> NOTE: **You need to observe logs for the results**.
 
 ---
 
@@ -215,7 +251,7 @@ python tests/test_scenarios.py parallel_orders
 
 The easiest way:
 
-```
+```bash
 python main.py > mes_run.log
 ```
 
@@ -242,19 +278,17 @@ WORKORDER_COMPLETED
 
 This shows the complete orchestration flow.
 
+> **Note:** For better traceability, we plan to implement trace_ids in the future, but for this PoC it's a bit too much. We could also use some built-in Python libraries (for example, OpenTelemetry with Jaeger exporter).
+
 ---
 
 # Key Concepts Demonstrated
 
-Event-driven orchestration
-
-Loose coupling between systems
-
-Partial manufacturing success handling
-
-Rework logic
-
-Observable workflows
+- Event-driven orchestration
+- Loose coupling between systems
+- Partial manufacturing success handling
+- Rework logic
+- Observable workflows
 
 ---
 
@@ -264,10 +298,11 @@ This is a PoC.
 
 Simplifications:
 
-- no database
+- no database (in-memory store)
 - simulated machines
 - simulated ERP/WMS
 - no physical device integrations
+- no distributed tracing (trace_ids) - planned for future but too much for PoC; could use Python libraries like OpenTelemetry with Jaeger exporter
 
 The focus is **MES orchestration**.
 
@@ -283,6 +318,7 @@ Future improvements:
 - metrics and monitoring
 - dead letter queues
 - retry policies
+- better traceabilty
 
 ---
 

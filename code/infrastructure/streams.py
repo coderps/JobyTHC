@@ -3,6 +3,8 @@
 This module manages the creation and configuration of NATS JetStream streams.
 Streams define the subjects they consume from and their retention/storage policies.
 This module ensures that required streams exist on startup and can reset them for testing.
+
+Checkout domain/events.py for event subscription and handling logic that interacts with these streams.
 """
 from __future__ import annotations
 

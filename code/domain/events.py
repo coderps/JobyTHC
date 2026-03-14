@@ -1,5 +1,32 @@
 """
-This module defines the event handlers for the manufacturing execution system (MES).
+Event Subscription Module for Manufacturing Execution System (MES)
+
+This module defines and manages all event subscriptions for the MES system.
+It coordinates event handlers for core manufacturing workflows, simulated external systems,
+and observability/monitoring components.
+
+Key Events in the Manufacturing Workflow:
+
+Core MES Events (Processed by MES):
+- order.created: ERP publishes new customer orders with inventory reservation details
+- cnc.job.completed: CNC machine completes machining with duration and status
+- quality.inspection.completed: Quality system reports inspection results with pass/fail details
+
+MES Output Events (Published by MES):
+- mes.workorder.created: MES creates internal work orders from customer orders
+- cnc.job.requested: MES requests CNC machining for work orders
+- quality.inspection.requested: MES requests quality inspection after CNC completion
+- wms.inventory.updated: MES updates inventory when parts pass quality inspection
+- assembly.job.requested: MES forwards passed parts to assembly station
+
+Simulated External System Events:
+- cnc.job.started: CNC machine begins processing a machining job (simulated response)
+- cnc.job.requested: Triggers CNC simulator to start machining job
+- quality.inspection.requested: Triggers quality simulator to perform inspection
+
+Observability Events (Logged for monitoring):
+- wms.inventory.updated: Inventory changes logged for audit trail
+- assembly.job.requested: Assembly requests logged for workflow visibility
 """
 import asyncio
 

@@ -98,12 +98,19 @@ NATS --> Assembly
 
 ```json
 {
-  "event_type": "cnc.job.requested",
-  "order_id": "ORD-1001",
-  "work_order_id": "WO-501",
-  "part_id": "ObjA",
+  "metadata": {
+    "event_type": "cnc.job.requested",
+    "event_id": "evt-cnc-req-001",
+    "timestamp": "2026-03-10T09:15:00Z",
+    "correlation_id": "corr-wo-501"
+  },
+  "workorder_id": "WO-501",
+  "order_id": "ORD-001",
+  "sku": "ObjA",
+  "quantity": 2,
   "routing_step": "machining",
-  "target_machine": "CNC-07"
+  "target_machine": "CNC-07",
+  "attempt": 1
 }
 ```
 
@@ -111,11 +118,26 @@ NATS --> Assembly
 
 ```json
 {
-  "event_type": "quality.inspection.completed",
-  "work_order_id": "WO-501",
-  "produced_part_id": "PART-9001",
-  "result": "FAILED",
-  "reason": "diameter_out_of_tolerance"
+  "metadata": {
+    "event_type": "quality.inspection.completed",
+    "event_id": "evt-qual-001",
+    "timestamp": "2026-03-10T10:25:12Z",
+    "correlation_id": "corr-wo-501"
+  },
+  "workorder_id": "WO-501",
+  "order_id": "ORD-001",
+  "sku": "ObjA",
+  "inspected_quantity": 2,
+  "passed_quantity": 1,
+  "failed_quantity": 1,
+  "disposition": "PARTIAL_REWORK",
+  "failure_reasons": [
+    {
+      "qty": 1,
+      "reason": "diameter_out_of_tolerance"
+    }
+  ],
+  "attempt": 1
 }
 ```
 

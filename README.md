@@ -75,8 +75,13 @@ The key was maintaining direction. AI served as an intelligent autocomplete and 
 
 ### Prerequisites
 
+- Docker
+- Python v3.13+
+
 ```bash
-python3.13
+curl -fsSL https://get.docker.com -o get-docker.sh && sh get-docker.sh
+docker run -d --name nats-jetstream -p 4222:4222 -p 8222:8222 -v nats-data:/data nats:latest -js -sd /data
+python3 -V
 pip install -r code/requirements.txt
 ```
 
@@ -125,3 +130,5 @@ For detailed architectural decisions, see [docs/ADRs/](docs/ADRs/).
 - **Technical Details**: See [code/README.md](code/README.md)
 - **Architecture Decisions**: See [docs/PoC-Scope-MES-Orchestration.md](docs/PoC-Scope-MES-Orchestration.md)
 - **ADRs**: See [docs/ADRs/](docs/ADRs/) for Architecture Decision Records
+- **Challenge Details**: See [Software_Engineering_Lead-Take_home_challenge.pdf](docs/Software_Engineering_Lead-Take_home_challenge.pdf)
+- **NATS JetStream**: [official-docs](https://docs.nats.io/nats-concepts/jetstream)
